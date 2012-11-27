@@ -12,7 +12,7 @@ class Pcl < Formula
 		sha256 '3d384a37ce801a75c8995801e650a5e2c13e0d67541aa676cad4fa27996ce346'
 	end
 
-  head 'svn+ssh://svn@svn.pointclouds.org/pcl/trunk'
+  head 'http://svn.pointclouds.org/pcl/trunk'
 
 	fails_with :clang do
 		build 421
