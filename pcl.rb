@@ -7,7 +7,7 @@ class Pcl < Formula
 	sha256 '6ab3b0a95e78888ff9779ec841e398f8b96c20eda4a3ce65ee647c1d7cc2b637'
 
 	devel do
-  version '1.6.0'
+    version '1.6.0'
 		url 'http://www.pointclouds.org/assets/files/1.6.0/PCL-1.6.0-Source.tar.bz2'
 		sha256 '3d384a37ce801a75c8995801e650a5e2c13e0d67541aa676cad4fa27996ce346'
 	end
@@ -28,8 +28,8 @@ class Pcl < Formula
   depends_on 'qhull'
   depends_on 'libusb'
 
-  depends_on 'doxygen' if ARGV.include? '--doc'
-  depends_on 'sphinx'  if ARGV.include? '--doc'
+  depends_on 'doxygen' if build.include? '--doc'
+  # pip install sphinx
 
   def options
   [
@@ -59,33 +59,36 @@ class Pcl < Formula
   def install
     args = std_cmake_parameters.split
 
-		args << "-DBUILD_apps:BOOL=OFF" if ARGV.include? '--noapps'
-    if ARGV.include? '--doc'
+		args << "-DBUILD_apps:BOOL=OFF" if build.include? '--noapps'
+    if build.include? '--doc'
       args << "-DBUILD_documentation:BOOL=ON"
     else
       args << "-DBUILD_documentation:BOOL=OFF"
     end
-		args << "-DBUILD_features:BOOL=OFF"       if ARGV.include? '--nofeatures'
-		args << "-DBUILD_filters:BOOL=OFF"        if ARGV.include? '--nofilters'
-		args << "-DBUILD_io:BOOL=OFF"             if ARGV.include? '--noio'
-		args << "-DBUILD_kdtree:BOOL=OFF"         if ARGV.include? '--nokdtree'
-		args << "-DBUILD_keypoints:BOOL=OFF"      if ARGV.include? '--nokeypoints'
-		args << "-DBUILD_octree:BOOL=OFF"         if ARGV.include? '--nooctree'
-		args << "-DBUILD_proctor:BOOL=OFF"        if ARGV.include? '--noproctor'
-		args << "-DBUILD_python:BOOL=OFF"         if ARGV.include? '--nopython'
-		args << "-DBUILD_rangeimage:BOOL=OFF"     if ARGV.include? '--norangeimage'
-		args << "-DBUILD_registration:BOOL=OFF"   if ARGV.include? '--noregistration'
-		args << "-DBUILD_sac:BOOL=OFF"            if ARGV.include? '--nosac'
-		args << "-DBUILD_search:BOOL=OFF"         if ARGV.include? '--nosearch'
-		args << "-DBUILD_segmentation:BOOL=OFF"   if ARGV.include? '--nosegmentation'
-		args << "-DBUILD_surface:BOOL=OFF"        if ARGV.include? '--nosurface'
-		args << "-DBUILD_tools:BOOL=OFF"          if ARGV.include? '--notools'
-		args << "-DBUILD_tracking:BOOL=OFF"       if ARGV.include? '--notracking'
-		args << "-DBUILD_visualization:BOOL=OFF"  if ARGV.include? '--novis'
+		args << "-DBUILD_features:BOOL=OFF"       if build.include? '--nofeatures'
+		args << "-DBUILD_filters:BOOL=OFF"        if build.include? '--nofilters'
+		args << "-DBUILD_io:BOOL=OFF"             if build.include? '--noio'
+		args << "-DBUILD_kdtree:BOOL=OFF"         if build.include? '--nokdtree'
+		args << "-DBUILD_keypoints:BOOL=OFF"      if build.include? '--nokeypoints'
+		args << "-DBUILD_octree:BOOL=OFF"         if build.include? '--nooctree'
+		args << "-DBUILD_proctor:BOOL=OFF"        if build.include? '--noproctor'
+		args << "-DBUILD_python:BOOL=OFF"         if build.include? '--nopython'
+		args << "-DBUILD_rangeimage:BOOL=OFF"     if build.include? '--norangeimage'
+		args << "-DBUILD_registration:BOOL=OFF"   if build.include? '--noregistration'
+		args << "-DBUILD_sac:BOOL=OFF"            if build.include? '--nosac'
+		args << "-DBUILD_search:BOOL=OFF"         if build.include? '--nosearch'
+		args << "-DBUILD_segmentation:BOOL=OFF"   if build.include? '--nosegmentation'
+		args << "-DBUILD_surface:BOOL=OFF"        if build.include? '--nosurface'
+		args << "-DBUILD_tools:BOOL=OFF"          if build.include? '--notools'
+		args << "-DBUILD_tracking:BOOL=OFF"       if build.include? '--notracking'
+		args << "-DBUILD_visualization:BOOL=OFF"  if build.include? '--novis'
 
-    if ARGV.include? '--with-debug'
+    if build.include? '--with-debug'
+      ENV['CFLAGS']   = "-ggdb3 -O0"
+      ENV['CXXFLAGS'] = "-ggdb3 -O0"
 			args.delete '-DCMAKE_BUILD_TYPE=None'
 			args << "-DCMAKE_BUILD_TYPE=Debug"
+			args << "-DCMAKE_VERBOSE_MAKEFILE=true"
 			args << "-DCMAKE_C_FLAGS_DEBUG=-ggdb3 -O0"
 			args << "-DCMAKE_CXX_FLAGS_DEBUG=-ggdb3 -O0"
     end
@@ -93,6 +96,19 @@ class Pcl < Formula
 		boost149_base    = Formula.factory('boost149').installed_prefix
 		boost149_include = File.join(boost149_base, 'include')
 		args << "-DBoost_INCLUDE_DIR=#{boost149_include}"
+
+		openni_base    = Formula.factory('openni').installed_prefix
+		openni_include = File.join(openni_base, 'include')
+    if build.devel?
+      args << "-DOPENNI_INCLUDE_DIR=#{openni_include}/ni"
+    else
+      args << "-DOPENNI_INCLUDE_DIR=#{openni_include}"
+    end
+
+    sphinx_build = '/usr/local/share/python/sphinx-build'
+    if File.exists? sphinx_build
+      args << "-DSPHINX_EXECUTABLE=/usr/local/share/python/sphinx-build"
+    end
 
     system "mkdir build"
     args << ".."
