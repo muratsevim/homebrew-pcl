@@ -83,9 +83,12 @@ class Pcl < Formula
 		args << "-DBUILD_tracking:BOOL=OFF"       if build.include? '--notracking'
 		args << "-DBUILD_visualization:BOOL=OFF"  if build.include? '--novis'
 
+    ENV['CFLAGS']   ||= ''
+    ENV['CXXFLAGS'] ||= ''
+
     if build.include? '--with-debug'
-      ENV['CFLAGS']   = "-ggdb3 -O0"
-      ENV['CXXFLAGS'] = "-ggdb3 -O0"
+      ENV['CFLAGS']   += "-ggdb3 -O0"
+      ENV['CXXFLAGS'] += "-ggdb3 -O0"
 			args.delete '-DCMAKE_BUILD_TYPE=None'
 			args << "-DCMAKE_BUILD_TYPE=Debug"
 			args << "-DCMAKE_VERBOSE_MAKEFILE=true"
@@ -99,11 +102,9 @@ class Pcl < Formula
 
 		openni_base    = Formula.factory('openni').installed_prefix
 		openni_include = File.join(openni_base, 'include')
-    if build.devel?
-      args << "-DOPENNI_INCLUDE_DIR=#{openni_include}/ni"
-    else
-      args << "-DOPENNI_INCLUDE_DIR=#{openni_include}"
-    end
+    args << "-DOPENNI_INCLUDE_DIR=#{openni_include}/ni"
+    ENV['CFLAGS']   += " -I#{openni_include}"
+    ENV['CXXFLAGS'] += " -I#{openni_include}"
 
     sphinx_build = '/usr/local/share/python/sphinx-build'
     if File.exists? sphinx_build
