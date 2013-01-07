@@ -59,7 +59,6 @@ class Pcl < Formula
   def install
     args = std_cmake_parameters.split
 
-		args << "-DBUILD_apps:BOOL=OFF"          if build.include? '--noapps'
     args << "-DBUILD_documentation:BOOL=ON"  if build.include? '--doc'
 		args << "-DBUILD_features:BOOL=OFF"      if build.include? '--nofeatures'
 		args << "-DBUILD_filters:BOOL=OFF"       if build.include? '--nofilters'
@@ -70,18 +69,19 @@ class Pcl < Formula
 		args << "-DBUILD_registration:BOOL=OFF"  if build.include? '--noregistration'
 		args << "-DBUILD_search:BOOL=OFF"        if build.include? '--nosearch'
 		args << "-DBUILD_segmentation:BOOL=OFF"  if build.include? '--nosegmentation'
-		args << "-DBUILD_surface:BOOL=OFF"       if build.include? '--nosurface'
 		args << "-DBUILD_tools:BOOL=OFF"         if build.include? '--notools'
 		args << "-DBUILD_tracking:BOOL=OFF"      if build.include? '--notracking'
 		args << "-DBUILD_visualization:BOOL=OFF" if build.include? '--novis'
     # default on
+		args << "-DBUILD_apps:BOOL=ON"
     args << "-DBUILD_2d:BOOL=ON"
     args << "-DBUILD_3d_rec_framework:BOOL=ON"
     args << "-DBUILD_CUDA:BOOL=ON"
     args << "-DBUILD_GPU:BOOL=ON"
     args << "-DBUILD_OPENNI:BOOL=ON"
-    args << "-DBUILD_apps:BOOL=ON"
     args << "-DBUILD_common:BOOL=ON"
+    args << "-DBUILD_cuda_apps:BOOL=ON"
+    args << "-DBUILD_cuda_io:BOOL=ON"
     args << "-DBUILD_examples:BOOL=ON"
     args << "-DBUILD_filters:BOOL=ON"
     args << "-DBUILD_geometry:BOOL=ON"
@@ -92,22 +92,23 @@ class Pcl < Formula
     args << "-DBUILD_gpu_kinfu_large_scale:BOOL=ON"
     args << "-DBUILD_gpu_octree:BOOL=ON"
     args << "-DBUILD_gpu_segmentation:BOOL=ON"
+    args << "-DBUILD_gpu_surface:BOOL=ON"
     args << "-DBUILD_gpu_utils:BOOL=ON"
     args << "-DBUILD_ml:BOOL=ON"
-    args << "-DBUILD_modeler:BOOL=ON"
-    args << "-DBUILD_optronic_viewer:BOOL=ON"
     args << "-DBUILD_outofcore:BOOL=ON"
-    args << "-DBUILD_point_cloud_editor:BOOL=ON"
     args << "-DBUILD_recognition:BOOL=ON"
     args << "-DBUILD_sample_consensus:BOOL=ON"
     args << "-DBUILD_stereo:BOOL=ON"
     # default off
-    args << "-DBUILD_simulation:BOOL=OFF"
-    args << "-DBUILD_cloud_composer:BOOL=OFF"
+    args << "-DBUILD_app_3d_rec_framework:BOOL=OFF"
+    args << "-DBUILD_app_cloud_composer:BOOL=OFF"
+    args << "-DBUILD_app_in_hand_scanner:BOOL=OFF"
+    args << "-DBUILD_app_modeler:BOOL=OFF"
+    args << "-DBUILD_app_optronic_viewer:BOOL=OFF"
+    args << "-DBUILD_app_point_cloud_editor:BOOL=OFF"
     args << "-DBUILD_gpu_people:BOOL=OFF"
-    args << "-DBUILD_gpu_surface:BOOL=OFF"
     args << "-DBUILD_gpu_tracking:BOOL=OFF"
-    args << "-DBUILD_in_hand_scanner:BOOL=OFF"
+    args << "-DBUILD_simulation:BOOL=OFF"
 
     ENV['CFLAGS']   ||= ''
     ENV['CXXFLAGS'] ||= ''
@@ -118,8 +119,9 @@ class Pcl < Formula
 			args.delete '-DCMAKE_BUILD_TYPE=None'
 			args << "-DCMAKE_BUILD_TYPE=Debug"
 			args << "-DCMAKE_VERBOSE_MAKEFILE=true"
-			args << "-DCMAKE_C_FLAGS_DEBUG=-ggdb3 -O0"
-			args << "-DCMAKE_CXX_FLAGS_DEBUG=-ggdb3 -O0"
+      debug_flags = "-ggdb3 -O0 -fno-inline -ggdb3"
+			args << "-DCMAKE_C_FLAGS_DEBUG='#{debug_flags}'"
+			args << "-DCMAKE_CXX_FLAGS_DEBUG='#{debug_flags}'"
     else
 			args << "-DCMAKE_BUILD_TYPE=Release"
     end
@@ -128,9 +130,16 @@ class Pcl < Formula
 		boost149_include = File.join(boost149_base, 'include')
 		args << "-DBoost_INCLUDE_DIR=#{boost149_include}"
 
+    # fix bad glew detection
+		glew_base    = Formula.factory('glew').installed_prefix
+		glew_include = File.join(glew_base, 'include')
+    args << "-DGLEW_INCLUDE_DIR=#{glew_include}"
+
+    # fix bad openni detection
 		openni_base    = Formula.factory('openni').installed_prefix
 		openni_include = File.join(openni_base, 'include')
     args << "-DOPENNI_INCLUDE_DIR=#{openni_include}/ni"
+
     ENV['CFLAGS']   += " -I#{openni_include}"
     ENV['CXXFLAGS'] += " -I#{openni_include}"
 
