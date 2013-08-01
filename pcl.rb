@@ -12,15 +12,10 @@ class Pcl < Formula
 		sha256 '3d384a37ce801a75c8995801e650a5e2c13e0d67541aa676cad4fa27996ce346'
 	end
 
-  head 'http://svn.pointclouds.org/pcl/trunk'
-
-	fails_with :clang do
-		build 421
-		cause "Compilation fails with clang"
-	end
+  head 'https://github.com/PointCloudLibrary/pcl.git'
 
   depends_on 'cmake'
-  depends_on 'boost149'
+  depends_on 'boost'
   depends_on 'eigen'
   depends_on 'flann'
   depends_on 'cminpack'
@@ -82,7 +77,6 @@ class Pcl < Formula
     args << "-DBUILD_common:BOOL=ON"
     args << "-DBUILD_cuda_apps:BOOL=ON"
     args << "-DBUILD_cuda_io:BOOL=ON"
-    args << "-DBUILD_examples:BOOL=ON"
     args << "-DBUILD_filters:BOOL=ON"
     args << "-DBUILD_geometry:BOOL=ON"
     args << "-DBUILD_global_tests:BOOL=ON"
@@ -109,6 +103,7 @@ class Pcl < Formula
     args << "-DBUILD_gpu_people:BOOL=OFF"
     args << "-DBUILD_gpu_tracking:BOOL=OFF"
     args << "-DBUILD_simulation:BOOL=OFF"
+    args << "-DBUILD_examples:BOOL=OFF"
 
     ENV['CFLAGS']   ||= ''
     ENV['CXXFLAGS'] ||= ''
@@ -126,23 +121,18 @@ class Pcl < Formula
 			args << "-DCMAKE_BUILD_TYPE=Release"
     end
 
-		boost149_base    = Formula.factory('boost149').installed_prefix
-		boost149_include = File.join(boost149_base, 'include')
-		args << "-DBoost_INCLUDE_DIR=#{boost149_include}"
-
     # fix bad glew detection
 		glew_base    = Formula.factory('glew').installed_prefix
 		glew_include = File.join(glew_base, 'include')
     args << "-DGLEW_INCLUDE_DIR=#{glew_include}"
 
-    # fix bad openni detection
-		openni_base    = Formula.factory('openni').installed_prefix
+	# fix bad openni detection
+		openniF = Formula.factory('openni')
+		openni_base = openniF.opt_prefix.exist? ? openniF.opt_prefix : openniF.installed_prefix
 		openni_include = File.join(openni_base, 'include')
+	puts "#{openni_include}"
     args << "-DOPENNI_INCLUDE_DIR=#{openni_include}/ni"
-
-    ENV['CFLAGS']   += " -I#{openni_include}"
-    ENV['CXXFLAGS'] += " -I#{openni_include}"
-
+    
     sphinx_build = '/usr/local/share/python/sphinx-build'
     if File.exists? sphinx_build
       args << "-DSPHINX_EXECUTABLE=/usr/local/share/python/sphinx-build"
